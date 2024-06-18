@@ -3,24 +3,10 @@ todo
 improve user intraction
 error handling
 """
-import atexit, pickle, os, sys
+import pickle, os
 
-def on_exit():
-    print("Program closed!")
-atexit.register(on_exit)
-
-if os.path.exists("data.pickle"):
-    with open("data.pickle", "rb") as f:
-        A = pickle.load(f)
-        B = pickle.load(f)
-        C = pickle.load(f)
-        P = pickle.load(f)
-        Q = pickle.load(f)
-        R = pickle.load(f)
-        X = pickle.load(f)
-        Y = pickle.load(f)
-        Z = pickle.load(f)
-else:
+def defaultvars():
+    global A,B,C,P,Q,R,X,Y,Z
     A=[["a11","a12","a13"],["a21","a22","a23"],["a31","a32","a33"]]
     B=[["b11","b12","b13"],["b21","b22","b23"],["b31","b32","b33"]]
     C=[["c11","c12","c13"],["c21","c22","c23"],["c31","c32","c33"]]
@@ -36,6 +22,20 @@ else:
     X=[["x11","x12","x13"],["x21","x22","x23"],["x31","x32","x33"]]
     Y=[["y11","y12","y13"],["y21","y22","y23"],["y31","y32","y33"]]
     Z=[["z11","z12","z13"],["z21","z22","z23"],["z31","z32","z33"]]
+
+if os.path.exists("data.pickle"):
+    with open("data.pickle", "rb") as f:
+        A = pickle.load(f)
+        B = pickle.load(f)
+        C = pickle.load(f)
+        P = pickle.load(f)
+        Q = pickle.load(f)
+        R = pickle.load(f)
+        X = pickle.load(f)
+        Y = pickle.load(f)
+        Z = pickle.load(f)
+else:
+    defaultvars()
 
 on = True
 
@@ -94,16 +94,6 @@ def sendone(a):
             Y[y-1][x-1] = 1
         case "Z":
             Z[y-1][x-1] = 1
-    with open("data.pickle", "wb") as f:
-        pickle.dump(A, f)
-        pickle.dump(B, f)
-        pickle.dump(C, f)
-        pickle.dump(P, f)
-        pickle.dump(Q, f)
-        pickle.dump(R, f)
-        pickle.dump(X, f)
-        pickle.dump(Y, f)
-        pickle.dump(Z, f)
         
 
 def sendzero(a):
@@ -129,6 +119,8 @@ def sendzero(a):
             Y[y-1][x-1] = 0
         case "Z":
             Z[y-1][x-1] = 0
+        
+def dump_data():
     with open("data.pickle", "wb") as f:
         pickle.dump(A, f)
         pickle.dump(B, f)
@@ -139,8 +131,6 @@ def sendzero(a):
         pickle.dump(X, f)
         pickle.dump(Y, f)
         pickle.dump(Z, f)
-        
-
 def findnextbox(x):
     if x=="11":
         return "A"
@@ -193,83 +183,94 @@ def invalidbox(a):
         return 0
     
     
-
-i=2
-global next_box
-while on==True:
-    if i%2==0:
-        #print("\033[2J\033[H", end="", flush=True)
-        display()
-        if i==2:
-            print("Start the game (1)")
-            a=input("pick (1) :")
-            if a == "newgame":
-                os.remove("data.pickle")
-                print("db cleared. restart the program to start new game")
-                sys.exit(0)
-            sendone(a)
-            i+=1
-        else:    
+def main():
+    player_counter=2
+    global next_box
+    while on==True:
+        if player_counter%2==0:
+            #print("\033[2J\033[H", end="", flush=True)
+            display()
+            if player_counter==2:
+                print("Start the game (1)")
+                a=input("pick (1) :")
+                if a == "newgame":
+                    if os.path.exists("data.pickle"):
+                        os.remove("data.pickle")
+                    defaultvars()
+                    main()
+                player_counter+=1
+                sendone(a)
+                dump_data()
+            else:    
+                if invalidbox(next_box):
+                    print("u can play wherever u want")
+                    a=input("pick (1) :")
+                    if a == "newgame":
+                        if os.path.exists("data.pickle"):
+                            os.remove("data.pickle")
+                        defaultvars()
+                        main()
+                    if invalidbox(a[0].upper()):
+                        print("u cannot play there")
+                        player_counter+=2
+                        continue
+                    else:
+                        player_counter+=1
+                        sendone(a)
+                        dump_data()
+                else:
+                    a=input("pick (1) :")
+                    if a == "newgame":
+                        os.remove("data.pickle")
+                        #print("db cleared. restart the program to start new game")
+                        #sys.exit(0)
+                        main()
+                    if a[0].upper() == next_box:
+                        player_counter+=1
+                        sendone(a)
+                        dump_data()
+                    else:
+                        print(f"Invalid Box U have to play in {next_box} box")
+                        player_counter+=2
+                        continue
+            myr()
+            next_box=findnextbox(a[-2:])
+        else:
+            #print("\033[2J\033[H", end="", flush=True)
+            display()
             if invalidbox(next_box):
                 print("u can play wherever u want")
                 a=input("pick (1) :")
                 if a == "newgame":
-                    os.remove("data.pickle")
-                    print("db cleared. restart the program to start new game")
-                    sys.exit(0)
+                    if os.path.exists("data.pickle"):
+                        os.remove("data.pickle")
+                    defaultvars()
+                    main()
                 if invalidbox(a[0].upper()):
                     print("u cannot play there")
-                    i+=2
+                    player_counter+=2
                     continue
                 else:
-                    i+=1
-                    sendone(a)
+                    player_counter+=1
+                    sendzero(a)
+                    dump_data()
             else:
-                a=input("pick (1) :")
+                a=input("pick (0) :")
                 if a == "newgame":
-                    os.remove("data.pickle")
-                    print("db cleared. restart the program to start new game")
-                    sys.exit(0)
+                    if os.path.exists("data.pickle"):
+                        os.remove("data.pickle")
+                    defaultvars()
+                    main()
                 if a[0].upper() == next_box:
-                    i+=1
-                    sendone(a)
+                    player_counter+=1
+                    sendzero(a)
+                    dump_data()
                 else:
                     print(f"Invalid Box U have to play in {next_box} box")
-                    i+=2
+                    player_counter+=2
                     continue
-        myr()
-        next_box=findnextbox(a[-2:])
-    else:
-        #print("\033[2J\033[H", end="", flush=True)
-        display()
-        if invalidbox(next_box):
-            print("u can play wherever u want")
-            a=input("pick (1) :")
-            if a == "newgame":
-                os.remove("data.pickle")
-                print("db cleared. restart the program to start new game")
-                sys.exit(0)
-            if invalidbox(a[0].upper()):
-                print("u cannot play there")
-                i+=2
-                continue
-            else:
-                i+=1
-                sendzero(a)
-        else:
-            a=input("pick (0) :")
-            if a == "newgame":
-                os.remove("data.pickle")
-                print("db cleared. restart the program to start new game")
-                sys.exit(0)
-            if a[0].upper() == next_box:
-                i+=1
-                sendzero(a)
-            else:
-                print(f"Invalid Box U have to play in {next_box} box")
-                i+=2
-                continue
-        myr()
-        next_box=findnextbox(a[-2:])
-        print("next box",next_box)
+            myr()
+            next_box=findnextbox(a[-2:])
+            print("next box",next_box)
 
+main()
