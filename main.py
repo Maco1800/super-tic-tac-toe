@@ -2,6 +2,7 @@
 todo
 improve user intraction
 error handling
+store index value for next player
 """
 import pickle, os
 
